@@ -1,18 +1,22 @@
 // ==UserScript==
 // @name         bilibili - H5播放器快捷操作
 // @namespace    https://github.com/jeayu/bilibili-quickdo
-// @version      0.8
+// @version      0.9
 // @description  双击全屏,'+','-'调节播放速度、f键全屏、w键网页全屏、p键暂停/播放、d键开启/关闭弹幕等
 // @author       jeayu
 // @match        *://www.bilibili.com/video/*
 // @match        *://bangumi.bilibili.com/*
-// @grant GM_setValue
-// @grant GM_getValue
+// @match        *://www.bilibili.com/watchlater/*
+// @match        *://bangumi.bilibili.com/anime/*/play*
+// @run-at       document-body
+// @grant        GM_setValue
+// @grant        GM_getValue
 // ==/UserScript==
 
 /*
-v0.8 更新：
-播放器右侧设置-高级选项 可以设置自动播放、全屏和关闭弹幕
+v0.9 更新：
+网页全屏快捷键W改为宽屏，自动全屏改为自动宽屏
+
 
 历史更新：
 https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
@@ -73,7 +77,7 @@ https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
         config: {
             quickDo: {
                 'fullscreen': 'f',
-                'webFullscreen': 'w',
+                'widescreen': 'w',
                 'addSpeed': '=+',
                 'subSpeed': '-_',
                 'danmu': 'd',
@@ -85,12 +89,12 @@ https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
             auto: {
                 'switch': 1, //总开关 1开启 0关闭
                 'play': 1, //1开启 0关闭
-                'fullscreen': 1, //1全屏 0关闭
+                'widescreen': 1, //1宽屏 0关闭
                 'danmu': 1 //1开启 0关闭
             },
             initLoopTime: 100,
             initLoopCount: 500,
-            autoLoopTime: 300,
+            autoLoopTime: 500,
             autoLoopCount: 50,
         },
         dblclickFullscreen: function() {
@@ -145,8 +149,8 @@ https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
                 this.showInfoAnimate(player.playbackRate + ' X');
             } else if (keyCode === this.getKeyCode('fullscreen')){
                 $('.bilibili-player-iconfont.bilibili-player-iconfont-fullscreen', this.currentDocument).click();
-            } else if (keyCode === this.getKeyCode('webFullscreen')){
-                $('.bilibili-player-iconfont.bilibili-player-iconfont-web-fullscreen', this.currentDocument).click();
+            } else if (keyCode === this.getKeyCode('widescreen')){
+                $('.bilibili-player-iconfont.bilibili-player-iconfont-widescreen', this.currentDocument).click();
             } else if (keyCode === this.getKeyCode('danmu')){
                 if ($('.video-state-danmaku-off', this.currentDocument)[0]){
                     this.showInfoAnimate('弹幕开启');
@@ -176,8 +180,8 @@ https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
                     if(GM_getValue('playAndPause') === 1){
                         that.keyHandler(that.getKeyCode('playAndPause'));
                     }
-                    if (GM_getValue('fullscreen') === 1){
-                        that.keyHandler(that.getKeyCode('fullscreen'));
+                    if (GM_getValue('widescreen') === 1){
+                        that.keyHandler(that.getKeyCode('widescreen'));
                     }
                     if (GM_getValue('danmu') === 0){
                         that.keyHandler(that.getKeyCode('danmu'));
@@ -248,8 +252,8 @@ https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
         initSettingHTML: function(){
             var config = {
                 playAndPause: {checkboxId: 'checkboxAP', text: '自动播放'},
-                fullscreen: {checkboxId: 'checkboxAF',text: '自动全屏'},
-                danmu: {checkboxId: 'checkboxAD',text: '自动打开弹幕'}
+                widescreen: {checkboxId: 'checkboxAF',text: '自动宽屏'},
+                danmu: {checkboxId: 'checkboxAD',text: '打开弹幕'}
             };
             var that = this;
             for (let key in config){
