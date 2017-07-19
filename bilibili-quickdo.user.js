@@ -13,11 +13,8 @@
 // ==/UserScript==
 
 /*
-v1.0 更新：
-添加自动调整播放器位置功能
-双击全屏改为可选项，默认不生效
-播放键改为K，增加前进后退按钮L和J，去除换P功能
-增加N、M键调节音量
+v1.1 更新：
+重写部分功能
 
 历史更新：
 https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
@@ -27,7 +24,7 @@ https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
     'use strict';
 
     var playerQuickDo = {
-        player: null,
+        video: null,
         infoAnimateTimer: null,
         currentDocument: null,
         isBangumi: false,
@@ -106,7 +103,7 @@ https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
         dblclickFullscreen: function() {
             if(GM_getValue('dblclickFullscreen') === 1){   
                 var that = this;
-                this.player.dblclick(function() {
+                $(this.video).dblclick(function() {
                     $('.bilibili-player-iconfont.bilibili-player-iconfont-fullscreen', that.currentDocument).click();
                 });
             }
@@ -148,15 +145,16 @@ https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
             }
         },
         keyHandler: function(keyCode){
-            var player = this.player[0];
-            var video = document.querySelector('video');
+            /*
             if (keyCode === this.getKeyCode('addSpeed') && player.playbackRate < 4) {
                 player.playbackRate += 0.25;
                 this.showInfoAnimate(player.playbackRate + ' X');
             } else if (keyCode === this.getKeyCode('subSpeed') && player.playbackRate > 0.5) {
                 player.playbackRate -= 0.25;
                 this.showInfoAnimate(player.playbackRate + ' X');
-            } else if (keyCode === this.getKeyCode('fullscreen')){
+            } else 
+            */
+            if (keyCode === this.getKeyCode('fullscreen')){
                 $('.bilibili-player-iconfont.bilibili-player-iconfont-fullscreen', this.currentDocument).click();
             } else if (keyCode === this.getKeyCode('widescreen')){
                 $('.bilibili-player-iconfont.bilibili-player-iconfont-widescreen', this.currentDocument).click();
@@ -173,23 +171,23 @@ https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
             } else if (keyCode === this.getKeyCode('pushDanmu')){
                 this.pushDanmuHandler(keyCode);
             } else if (keyCode === this.getKeyCode('forward')){
-                video.currentTime += 5;
+                this.video.currentTime += 5;
             } else if (keyCode === this.getKeyCode('backward')){
-                video.currentTime -= 5;
+                this.video.currentTime -= 5;
             } else if (keyCode === this.getKeyCode('addVolume')){
-                if (video.volume + 0.1 <= 1) {
-                    video.volume += 0.1;
+                if (this.video.volume + 0.1 <= 1) {
+                    this.video.volume += 0.1;
                 } else {
-                    video.volume = 1;
+                    this.video.volume = 1;
                 }
-                this.showInfoAnimate(Math.round(video.volume*100) + '%');
+                this.showInfoAnimate(Math.round(this.video.volume*100) + '%');
             } else if (keyCode === this.getKeyCode('subVolume')){
-                if (video.volume - 0.1 >= 0) {
-                    video.volume -= 0.1;
+                if (this.video.volume - 0.1 >= 0) {
+                    this.video.volume -= 0.1;
                 } else {
-                    video.volume = 0;
+                    this.video.volume = 0;
                 }
-                this.showInfoAnimate(Math.round(video.volume*100) + '%');
+                this.showInfoAnimate(Math.round(this.video.volume*100) + '%');
             }
         },
         autoHandler: function(){
@@ -307,23 +305,22 @@ https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
                 });
             }, 1E3);
         },
-        getH5Player: function() {
-            if(this.player && this.player[0])
-                return this.player;
+        getVideo: function() {
+            //获取Video组件
+            if(this.video)
+                return this.video;
             var bangumi = /bangumi.bilibili.com/g;
             var iframePlayer = $('iframe.bilibiliHtml5Player');
+            var temDocument;
             if (bangumi.exec(location.href) && iframePlayer[0]) {
-                try{
-                    this.currentDocument = iframePlayer.contents();
-                    this.isBangumi = true;
-                    this.isBangumi = true;
-                } catch (e) {
-                }
+                temDocument = iframePlayer.prop('contentWindow').document;
+                this.isBangumi = true;
             } else{
-                this.currentDocument = $(document);
+                temDocument = document;
             }
-            this.player = $("body", this.currentDocument).find('.bilibili-player-video video');
-            return this.player;
+            this.currentDocument = $(temDocument);
+            this.video = temDocument.querySelector('video');
+            return this.video;
         },
         setPlayerSite: function() {
             //调整播放器位置
@@ -338,8 +335,8 @@ https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
             var timerCount = 0;
             var that = this;
             var timer = window.setInterval(function() {
-                var player = that.getH5Player();
-                if (player[0]) {
+                var video = that.getVideo();
+                if (video) {
                     try {
                         that.dblclickFullscreen();
                         that.initInfoStyle();
