@@ -15,6 +15,7 @@
 /*
 v1.1 更新：
 重写部分功能
+暂时去掉调节播放速度快捷键
 
 历史更新：
 https://github.com/jeayu/bilibili-quickdo/blob/master/README.md#更新历史
