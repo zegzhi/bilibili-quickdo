@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili - H5播放器快捷操作
 // @namespace    https://github.com/zegzhi/bilibili-quickdo
-// @version      2.0
+// @version      1.2
 // @description  bilibili - H5播放器快捷操作
 // @author       zegzhi
 // @match        *://www.bilibili.com/video/*
