@@ -98,10 +98,10 @@ v1.2 更新：
             },
             auto: {
                 'switch': 1,
-                'play': 1,
-                'widescreen': 1,
-                'swidescreen': 1,//超级宽屏
-                'danmu': 1,
+                'play': 0,
+                'widescreen': 0,
+                'swidescreen': 0,//超级宽屏
+                'danmu': 0,
                 'dblclickFullscreen': 0
             },
             initLoopTime: 100,
