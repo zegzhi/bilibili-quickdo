@@ -296,6 +296,7 @@ v1.2 更新：
                             if(s < h ) $(window).scrollTop(h);
                         });
                     });
+                    $(".bpui-slider-handle").remove();
                     window.scrollTo(0,$(".bili-header-m")[0].offsetHeight+7);
                     //移动元素位置
                     var about0 = $($(".main-inner")[0]); //标题栏
