@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili - H5播放器快捷操作
 // @namespace    https://github.com/zegzhi/bilibili-quickdo
-// @version      1.2
+// @version      1.3
 // @description  bilibili - H5播放器快捷操作
 // @author       zegzhi
 // @match        *://www.bilibili.com/video/*
@@ -12,9 +12,8 @@
 // ==/UserScript==
 
 /*
-v1.2 更新：
-    增加超级宽屏模式，修复n个bug，重新加回调节播放速度快捷键
-    历史更新:https://github.com/zegzhi/bilibili-quickdo
+v1.3 更新：
+    修复换P时的bug，并优化体验。
 
 ## 功能
 - 双击全屏
@@ -37,7 +36,6 @@ v1.2 更新：
         infoAnimateTimer: null,
         currentDocument: null,
         isBangumi: false,
-        isShowInput: false,
         keyCode:{
             'enter': 13,
             '=+': 187,
@@ -143,11 +141,13 @@ v1.2 更新：
             }
         },
         keyHandler: function(keyCode){
+            if(this.video.src === '')
+                this.getVideo();
             if (keyCode === this.getKeyCode('addSpeed') && this.video.playbackRate < 4) {
-                this.video.playbackRate += 0.25;
+                this.video.playbackRate += 0.5;
                 this.showInfoAnimate('X '+this.video.playbackRate);
             } else if (keyCode === this.getKeyCode('subSpeed') && this.video.playbackRate > 0.5) {
-                this.video.playbackRate -= 0.25;
+                this.video.playbackRate -= 0.5;
                 this.showInfoAnimate('X '+this.video.playbackRate);
             } else if (keyCode === this.getKeyCode('fullscreen')){
                 $('.bilibili-player-iconfont.bilibili-player-iconfont-fullscreen', this.currentDocument).click();
@@ -191,7 +191,7 @@ v1.2 更新：
                 this.video.autoplay = true;
             }
             if (GM_getValue('widescreen') === 1){
-                that.keyHandler(that.getKeyCode('widescreen'));
+                $('.icon-24wideoff', this.currentDocument).click();
             }
             if (GM_getValue('danmu') === 0){
                 that.keyHandler(that.getKeyCode('danmu'));
@@ -258,8 +258,6 @@ v1.2 更新：
         },
         getVideo: function() {
             //获取Video组件
-            if(this.video)
-                return this.video;
             var bangumi = /bangumi.bilibili.com/g;
             var iframePlayer = $('iframe.bilibiliHtml5Player');
             var temDocument;
@@ -270,10 +268,9 @@ v1.2 更新：
                 temDocument = document;
             }
             this.currentDocument = $(temDocument);
-            this.video = temDocument.querySelector('video');
-            return this.video;
+            this.video = $('video',this.currentDocument)[0];
         },
-        setPlayerSite: function() {
+        setScrollTo: function() {
             var bangumi = /bangumi.bilibili.com/g;
             var watchlater = /www.bilibili.com\/watchlater/g;
             if (bangumi.exec(location.href)) {
@@ -283,21 +280,34 @@ v1.2 更新：
                 window.scrollTo(0,h);
             } else {
                 if(GM_getValue('swidescreen') === 1){
-                    $(".n-i.gotop.sub").unbind();
-                    $(".n-i.gotop.sub").click(function(){
-                        var h = $(".bili-header-m")[0].offsetHeight+7;
-                        var timmer=requestAnimationFrame(function fn(){
-                            var s = $(window).scrollTop();
-                            if(s > h){
-                                s-=100;
-                                $(window).scrollTop(s);
-                                timmer=requestAnimationFrame(fn);
-                            }
-                            if(s < h ) $(window).scrollTop(h);
-                        });
-                    });
-                    $(".bpui-slider-handle").remove();
                     window.scrollTo(0,$(".bili-header-m")[0].offsetHeight+7);
+                } else {
+                    var height0 = $("#viewbox_report")[0].offsetHeight+$(".bili-header-m")[0].offsetHeight + 10;
+                    window.scrollTo(0,height0);
+                }
+            }
+        },
+        setPlayerStyle: function() {
+            this.setScrollTo();
+            var bangumi = /bangumi.bilibili.com/g;
+            var watchlater = /www.bilibili.com\/watchlater/g;
+            if (bangumi.exec(location.href)) {
+            } else if (watchlater.exec(location.href)) {
+            } else {
+                if(GM_getValue('swidescreen') === 1){
+                    $(".bpui-slider-handle")[0].remove();//删除进度条小圆点
+                    $(window).resize();//调整播放器大小
+                }
+            }
+        },
+        setPageStyle: function() {
+            var that = this;
+            var bangumi = /bangumi.bilibili.com/g;
+            var watchlater = /www.bilibili.com\/watchlater/g;
+            if (bangumi.exec(location.href)) {
+            } else if (watchlater.exec(location.href)) {
+            } else {
+                if(GM_getValue('swidescreen') === 1){
                     //移动元素位置
                     var about0 = $($(".main-inner")[0]); //标题栏
                     var about1 = $($(".main-inner")[1]);  //分p
@@ -310,32 +320,40 @@ v1.2 更新：
                     $("#bofqi").css("margin","0");
                     $(".player-wrapper").css("padding","0");
                     about.css("margin-left","115px");
-                    //调整播放器大小
-                    var width = $(window).width();
-                    var height = $(window).height()-110;
-                    $(".player").css({"width":width+"px", "height":height+"px"});
-                    window.onresize = function() {
+                    //调整播放器大小事件
+                    $(window).resize(function(){
                         var width = $(window).width();
                         var height = $(window).height()-110;
                         $(".player").css({"width":width+"px", "height":height+"px"});
-                    };
-                } else {
-                    var height0 = $("#viewbox_report")[0].offsetHeight+$(".bili-header-m")[0].offsetHeight + 10;
-                    window.scrollTo(0,height0);
+                    });
                 }
             }
+            //修改回到顶部按钮
+            $(".n-i.gotop.sub").unbind();
+            $(".n-i.gotop.sub").click(function(){
+                that.setScrollTo();
+            });
         },
-        init: function() {
+        init: function(n) {
             var timerCount = 0;
             var that = this;
+            window.onhashchange = function(){
+                setTimeout(function () {
+                    that.video = null;
+                    that.init(1);
+                },1000);
+            };
             var timer = window.setInterval(function() {
-                var video = that.getVideo();//获取Video组件
-                if (video) {
+                that.getVideo();//获取Video组件
+                if (that.video) {
                     try {
+                        if(n === 0) {
+                            that.setPageStyle();//调整页面样式
+                            that.bindKeydown();//绑定Keydown
+                        }
+                        that.setPlayerStyle();//调整播放器样式
                         that.initInfoStyle();//初始化信息样式
                         that.initSettingHTML();//初始化设置页面
-                        that.setPlayerSite();//调整页面样式
-                        that.bindKeydown();//绑定Keydown
                         that.autoHandler();//初始化播放器设置
                     } catch (e) {
                         console.log('playerQuickDo init error:'+e);
@@ -353,5 +371,5 @@ v1.2 更新：
             }, this.config.initLoopTime);
         }
     };
-    playerQuickDo.init();
+    playerQuickDo.init(0);
 })();
