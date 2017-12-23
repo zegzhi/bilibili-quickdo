@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili - H5播放器快捷操作
 // @namespace    https://github.com/zegzhi/bilibili-quickdo
-// @version      1.3
+// @version      1.3.1
 // @description  bilibili - H5播放器快捷操作
 // @author       zegzhi
 // @match        *://www.bilibili.com/video/*
@@ -12,8 +12,8 @@
 // ==/UserScript==
 
 /*
-v1.3 更新：
-    修复换P时的bug，并优化体验。
+v1.3.1 更新：
+    优化
 
 ## 功能
 - 双击全屏
@@ -261,7 +261,7 @@ v1.3 更新：
             var bangumi = /bangumi.bilibili.com/g;
             var iframePlayer = $('iframe.bilibiliHtml5Player');
             var temDocument;
-            if (bangumi.exec(location.href) && iframePlayer[0]) {
+            if (bangumi.exec(location.href) && document.domain=="bilibili.com" && iframePlayer[0]) {
                 temDocument = iframePlayer.prop('contentWindow').document;
                 this.isBangumi = true;
             } else{
@@ -274,15 +274,19 @@ v1.3 更新：
             var bangumi = /bangumi.bilibili.com/g;
             var watchlater = /www.bilibili.com\/watchlater/g;
             if (bangumi.exec(location.href)) {
-                window.scrollTo(0,380);
+                if(GM_getValue('swidescreen') === 1){
+                    window.scrollTo(0,$(".header")[0].offsetHeight + 3);
+                } else {
+                     window.scrollTo(0,380);
+                }
             } else if (watchlater.exec(location.href)) {
-                var h = $(".video-top-info")[0].offsetHeight+$(".bili-header-m")[0].offsetHeight + 10;
+                var h = $(".video-top-info")[0].offsetHeight+$(".bili-header-m")[0].offsetHeight+10;
                 window.scrollTo(0,h);
             } else {
                 if(GM_getValue('swidescreen') === 1){
                     window.scrollTo(0,$(".bili-header-m")[0].offsetHeight+7);
                 } else {
-                    var height0 = $("#viewbox_report")[0].offsetHeight+$(".bili-header-m")[0].offsetHeight + 10;
+                    var height0 = $("#viewbox_report")[0].offsetHeight+$(".bili-header-m")[0].offsetHeight+10;
                     window.scrollTo(0,height0);
                 }
             }
@@ -291,11 +295,10 @@ v1.3 更新：
             this.setScrollTo();
             var bangumi = /bangumi.bilibili.com/g;
             var watchlater = /www.bilibili.com\/watchlater/g;
-            if (bangumi.exec(location.href)) {
-            } else if (watchlater.exec(location.href)) {
+            if (watchlater.exec(location.href)) {
             } else {
                 if(GM_getValue('swidescreen') === 1){
-                    $(".bpui-slider-handle")[0].remove();//删除进度条小圆点
+                    $(".bpui-slider-handle",this.currentDocument)[0].remove();//删除进度条小圆点
                     $(window).resize();//调整播放器大小
                 }
             }
@@ -304,22 +307,41 @@ v1.3 更新：
             var that = this;
             var bangumi = /bangumi.bilibili.com/g;
             var watchlater = /www.bilibili.com\/watchlater/g;
+            var mainInner;
             if (bangumi.exec(location.href)) {
+                if(GM_getValue('swidescreen') === 1){
+                    //移动元素位置
+                    mainInner = $(".main-inner"); //标题栏
+                    $("#arc_toolbar_report").prependTo($(mainInner[2]));
+                    $(mainInner[1]).prependTo($(mainInner[2]));
+                    $(mainInner[0]).prependTo($(mainInner[2]));
+                    //微调间距
+                    $('.player-content').css("margin","0");
+                    $('.player-content').css("min-height","0");
+                    $('.viewbox .info .v-title h1').css("padding-top","8");
+                    $("#bofqi").css("margin","0");
+                    $(".player-wrapper").css("padding","0");
+                    $(mainInner[2]).css("margin-left","115px");
+                    //调整播放器大小事件
+                    $(window).resize(function(){
+                        var width = $(window).width();
+                        var height = $(window).height()-110;
+                        $(".player").css({"width":width+"px", "height":height+"px"});
+                    });
+                }
             } else if (watchlater.exec(location.href)) {
             } else {
                 if(GM_getValue('swidescreen') === 1){
                     //移动元素位置
-                    var about0 = $($(".main-inner")[0]); //标题栏
-                    var about1 = $($(".main-inner")[1]);  //分p
-                    var about = $($(".main-inner")[2]);  //简介
-                    $("#arc_toolbar_report").prependTo(about);
-                    about1.prependTo(about);
-                    about0.prependTo(about);
+                    mainInner = $(".main-inner"); //标题栏
+                    $("#arc_toolbar_report").prependTo($(mainInner[2]));
+                    $(mainInner[1]).prependTo($(mainInner[2]));
+                    $(mainInner[0]).prependTo($(mainInner[2]));
                     //微调间距
                     $(".sign").css("height","40px");
                     $("#bofqi").css("margin","0");
                     $(".player-wrapper").css("padding","0");
-                    about.css("margin-left","115px");
+                    $(mainInner[2]).css("margin-left","115px");
                     //调整播放器大小事件
                     $(window).resize(function(){
                         var width = $(window).width();
