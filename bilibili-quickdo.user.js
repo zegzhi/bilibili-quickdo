@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         bilibili - H5播放器快捷操作
 // @namespace    https://github.com/zegzhi/bilibili-quickdo
-// @version      1.3.1
+// @version      1.3.2
 // @description  bilibili - H5播放器快捷操作
 // @author       zegzhi
+// @match        *://www.bilibili.com/bangumi/play/ep*
 // @match        *://www.bilibili.com/video/*
 // @match        *://www.bilibili.com/watchlater/*
 // @match        *://bangumi.bilibili.com/anime/*/play*
@@ -12,8 +13,8 @@
 // ==/UserScript==
 
 /*
-v1.3.1 更新：
-    优化
+v1.3.2 更新：
+    兼容新版番剧域名
 
 ## 功能
 - 双击全屏
@@ -109,11 +110,11 @@ v1.3.1 更新：
         initInfoStyle: function() {
             var that = this;
             var css = `
-            <style type="text/css">
-                .bilibili-player.mode-fullscreen .bilibili-player-area .bilibili-player-video-wrap .bilibili-player-infoHint{width: 120px; height: 42px; line-height: 42px; padding: 15px 18px 15px 12px; font-size: 28px; margin-left: -75px; margin-top: -36px;}
-                .bilibili-player .bilibili-player-area .bilibili-player-video-wrap .bilibili-player-infoHint{position: absolute; top: 50%; left: 50%; z-index: 30; width: 82px; height: 32px; line-height: 32px; padding: 9px 7px 9px 7px; font-size: 20px; margin-left: -50px; margin-top: -25px; border-radius: 4px; background: rgba(255,255,255,.8); color: #000; text-align: center;}
-                .bilibili-player .bilibili-player-area .bilibili-player-video-wrap .bilibili-player-infoHint-text{vertical-align: top; display: inline-block; overflow: visible; text-align: center;}
-            </style> `;
+<style type="text/css">
+.bilibili-player.mode-fullscreen .bilibili-player-area .bilibili-player-video-wrap .bilibili-player-infoHint{width: 120px; height: 42px; line-height: 42px; padding: 15px 18px 15px 12px; font-size: 28px; margin-left: -75px; margin-top: -36px;}
+.bilibili-player .bilibili-player-area .bilibili-player-video-wrap .bilibili-player-infoHint{position: absolute; top: 50%; left: 50%; z-index: 30; width: 82px; height: 32px; line-height: 32px; padding: 9px 7px 9px 7px; font-size: 20px; margin-left: -50px; margin-top: -25px; border-radius: 4px; background: rgba(255,255,255,.8); color: #000; text-align: center;}
+.bilibili-player .bilibili-player-area .bilibili-player-video-wrap .bilibili-player-infoHint-text{vertical-align: top; display: inline-block; overflow: visible; text-align: center;}
+</style> `;
             var html = '<div class="bilibili-player-infoHint" style="opacity: 0; display: none;"><span class="bilibili-player-infoHint-text">1</span></div>';
             $('head', this.currentDocument).append(css);
             $('div.bilibili-player-video-wrap', this.currentDocument).append(html);
@@ -187,6 +188,14 @@ v1.3.1 更新：
             var that = this;
             var config = this.config.auto;
             if(config.switch === 0) return;
+            this.setScrollTo();
+            if (/www.bilibili.com\/watchlater/g.exec(location.href)) {
+            } else {
+                if(GM_getValue('swidescreen') === 1){
+                    $(".bpui-slider-handle",this.currentDocument)[0].remove();//删除进度条小圆点
+                    $(window).resize();//调整播放器大小
+                }
+            }
             if(GM_getValue('playAndPause') === 1){ //自动播放
                 this.video.autoplay = true;
             }
@@ -230,17 +239,17 @@ v1.3.1 更新：
         },
         getSettingHTML: function(checkboxId,text){
             var html = `
-            <div class="bilibili-player-fl">
-                <input type="checkbox" class="bpui-component bpui-checkbox bpui-button" id="${checkboxId}">
-                <label for="${checkboxId}" id="${checkboxId}-lable" class="button bpui-button-text-only" role="button" data-pressed="false">
-                    <span class="bpui-button-text">
-                        <i class="bpui-icon-checkbox icon-12checkbox"></i>
-                        <i class="bpui-icon-checkbox icon-12selected2"></i>
-                        <i class="bpui-icon-checkbox icon-12select"></i>
-                        <span class="bpui-checkbox-text" style="padding-left: 0px;">${text}</span>
-                    </span>
-                </label>
-            </div>`;
+<div class="bilibili-player-fl">
+<input type="checkbox" class="bpui-component bpui-checkbox bpui-button" id="${checkboxId}">
+<label for="${checkboxId}" id="${checkboxId}-lable" class="button bpui-button-text-only" role="button" data-pressed="false">
+<span class="bpui-button-text">
+<i class="bpui-icon-checkbox icon-12checkbox"></i>
+<i class="bpui-icon-checkbox icon-12selected2"></i>
+<i class="bpui-icon-checkbox icon-12select"></i>
+<span class="bpui-checkbox-text" style="padding-left: 0px;">${text}</span>
+</span>
+</label>
+</div>`;
             return html;
         },
         showInfoAnimate: function(info) {
@@ -258,28 +267,34 @@ v1.3.1 更新：
         },
         getVideo: function() {
             //获取Video组件
-            var bangumi = /bangumi.bilibili.com/g;
+            var bangumi = /bangumi.bilibili.com|www.bilibili.com\/bangumi\//g;
             var iframePlayer = $('iframe.bilibiliHtml5Player');
             var temDocument;
-            if (bangumi.exec(location.href) && document.domain=="bilibili.com" && iframePlayer[0]) {
-                temDocument = iframePlayer.prop('contentWindow').document;
+            if (bangumi.exec(location.href) && iframePlayer[0] && $('iframe').length>1) {
+                try {
+                    temDocument = iframePlayer.prop('contentWindow').document;
+                } catch(e) {}
                 this.isBangumi = true;
-            } else{
+            } else {
                 temDocument = document;
             }
             this.currentDocument = $(temDocument);
             this.video = $('video',this.currentDocument)[0];
         },
         setScrollTo: function() {
-            var bangumi = /bangumi.bilibili.com/g;
-            var watchlater = /www.bilibili.com\/watchlater/g;
-            if (bangumi.exec(location.href)) {
+            if (/bangumi.bilibili.com/g.exec(location.href)) {
                 if(GM_getValue('swidescreen') === 1){
                     window.scrollTo(0,$(".header")[0].offsetHeight + 3);
                 } else {
-                     window.scrollTo(0,380);
+                    window.scrollTo(0,380);
                 }
-            } else if (watchlater.exec(location.href)) {
+            } else  if (/www.bilibili.com\/bangumi\//g.exec(location.href)) {
+                if(GM_getValue('swidescreen') === 1){
+                    window.scrollTo(0,$(".bili-header-m")[0].offsetHeight + 7);
+                } else {
+                    window.scrollTo(0,380);
+                }
+            } else if (/www.bilibili.com\/watchlater\//g.exec(location.href)) {
                 var h = $(".video-top-info")[0].offsetHeight+$(".bili-header-m")[0].offsetHeight+10;
                 window.scrollTo(0,h);
             } else {
@@ -291,34 +306,19 @@ v1.3.1 更新：
                 }
             }
         },
-        setPlayerStyle: function() {
-            this.setScrollTo();
-            var bangumi = /bangumi.bilibili.com/g;
-            var watchlater = /www.bilibili.com\/watchlater/g;
-            if (watchlater.exec(location.href)) {
-            } else {
-                if(GM_getValue('swidescreen') === 1){
-                    $(".bpui-slider-handle",this.currentDocument)[0].remove();//删除进度条小圆点
-                    $(window).resize();//调整播放器大小
-                }
-            }
-        },
         setPageStyle: function() {
             var that = this;
-            var bangumi = /bangumi.bilibili.com/g;
-            var watchlater = /www.bilibili.com\/watchlater/g;
-            var mainInner;
-            if (bangumi.exec(location.href)) {
+            if (/bangumi.bilibili.com/g.exec(location.href)) {
                 if(GM_getValue('swidescreen') === 1){
                     //移动元素位置
-                    mainInner = $(".main-inner"); //标题栏
-                    $("#arc_toolbar_report").prependTo($(mainInner[2]));
+                    var mainInner = $('.main-inner'); //标题栏
+                    $('#arc_toolbar_report').prependTo($(mainInner[2]));
                     $(mainInner[1]).prependTo($(mainInner[2]));
                     $(mainInner[0]).prependTo($(mainInner[2]));
                     //微调间距
                     $('.player-content').css("margin","0");
                     $('.player-content').css("min-height","0");
-                    $('.viewbox .info .v-title h1').css("padding-top","8");
+                    $('.viewbox .info .v-title h1').css("padding-top","8"); //番剧标题上移
                     $("#bofqi").css("margin","0");
                     $(".player-wrapper").css("padding","0");
                     $(mainInner[2]).css("margin-left","115px");
@@ -328,52 +328,82 @@ v1.3.1 更新：
                         var height = $(window).height()-110;
                         $(".player").css({"width":width+"px", "height":height+"px"});
                     });
+                    //修改回到顶部按钮
+                    $(".n-i.gotop.sub").unbind().click(function(){
+                        that.setScrollTo();
+                    });
                 }
-            } else if (watchlater.exec(location.href)) {
-            } else {
+            } else if ( /www.bilibili.com\/bangumi\//g.exec(location.href)) {
                 if(GM_getValue('swidescreen') === 1){
-                    //移动元素位置
-                    mainInner = $(".main-inner"); //标题栏
-                    $("#arc_toolbar_report").prependTo($(mainInner[2]));
-                    $(mainInner[1]).prependTo($(mainInner[2]));
-                    $(mainInner[0]).prependTo($(mainInner[2]));
-                    //微调间距
-                    $(".sign").css("height","40px");
-                    $("#bofqi").css("margin","0");
-                    $(".player-wrapper").css("padding","0");
-                    $(mainInner[2]).css("margin-left","115px");
+                    $('.bangumi-info-wrapper').before($('.bangumi-header'));
+                    $('.bangumi-player').css('margin','0');
+                    $('.bangumi-player').css('height','auto');
+                    $('.player-wrapper').css('min-height','0');
+                    $('.player-wrapper').css('padding','0');
+                    $('.bangumi-header').css("margin-left","115px");
+                    $('.bangumi-info-wrapper').css("margin-left","115px");
+                    $('.sponsor-wrapper').css("margin-left","115px");
+                    $('.other-wrapper').css("margin-left","115px");
                     //调整播放器大小事件
                     $(window).resize(function(){
                         var width = $(window).width();
                         var height = $(window).height()-110;
                         $(".player").css({"width":width+"px", "height":height+"px"});
+                    });
+                    //修改回到顶部按钮
+                    $(".nav-goto-top").remove();
+                    $('.nav-mini-switch').before(
+                        $('<div class="nav-goto-top"></div>').click(function(){
+                            that.setScrollTo();
+                        })
+                    );
+                }
+            } else if (/www.bilibili.com\/watchlater\//g.exec(location.href)) {
+            } else if (/www.bilibili.com\/video\//g.exec(location.href)){
+                if(GM_getValue('swidescreen') === 1){
+                    //移动元素位置
+                    $('.main-inner:eq(2)').before($('.main-inner:eq(0)'));
+                    $('.main-inner:eq(2)').before($('.main-inner:eq(0)'));
+                    $('.main-inner:eq(2)').before($('#arc_toolbar_report'));
+                    //微调间距
+                    $(".sign").css("height","40px");   //up个性签名
+                    $("#bofqi").css("margin","0");
+                    $(".player-wrapper").css("padding","0");
+                    $('.main-inner').css("margin-left","115px");
+                    $('#arc_toolbar_report').css("margin-left","115px");
+                    //调整播放器大小事件
+                    $(window).resize(function(){
+                        var width = $(window).width();
+                        var height = $(window).height()-110;
+                        $(".player").css({"width":width+"px", "height":height+"px"});
+                    });
+                    //修改回到顶部按钮
+                    $(".n-i.gotop.sub").unbind().click(function(){
+                        that.setScrollTo();
                     });
                 }
             }
-            //修改回到顶部按钮
-            $(".n-i.gotop.sub").unbind();
-            $(".n-i.gotop.sub").click(function(){
-                that.setScrollTo();
-            });
         },
         init: function(n) {
+            console.log('playerQuickDo init('+n+')');
             var timerCount = 0;
             var that = this;
+            // 处理换P问题
             window.onhashchange = function(){
                 setTimeout(function () {
                     that.video = null;
                     that.init(1);
                 },1000);
             };
+            // 获取Video组件
             var timer = window.setInterval(function() {
-                that.getVideo();//获取Video组件
+                that.getVideo();
                 if (that.video) {
                     try {
                         if(n === 0) {
                             that.setPageStyle();//调整页面样式
                             that.bindKeydown();//绑定Keydown
                         }
-                        that.setPlayerStyle();//调整播放器样式
                         that.initInfoStyle();//初始化信息样式
                         that.initSettingHTML();//初始化设置页面
                         that.autoHandler();//初始化播放器设置
