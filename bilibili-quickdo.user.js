@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili-H5播放器快捷操作
 // @namespace    https://github.com/zegzhi/bilibili-quickdo
-// @version      1.3.3
+// @version      1.3.4
 // @description  bilibili - H5播放器快捷操作
 // @author       zegzhi
 // @match        *://www.bilibili.com/bangumi/play/ep*
@@ -13,8 +13,8 @@
 // ==/UserScript==
 
 /*
-v1.3.2 更新：
-    兼容新版播放页面
+v1.3.4 更新：
+    兼容部分播放页面
 ## 功能
 - 双击全屏
 - ```+``` ```-```键调节播放速度
@@ -290,35 +290,75 @@ v1.3.2 更新：
             if (GM_getValue('swidescreen') !== 1) return;
             switch (this.href) {
                 case 'video':
-                    // 移动元素位置
-                    var p1 =  $('.b-page-body>div:eq(0)'); // 头部
-                    var p2 = $('.b-page-body>div:eq(1)'); // 播放器
-                    var p2_1 = $('.b-page-body>div:eq(1)>div:eq(1)'); // 分p
-                    var p2_2 = $('#arc_toolbar_report'); // 视频底部数据栏
-                    var p3 = $('.b-page-body>div:eq(2)');  // 底部（视频信息+评论）
-                    p3.before(p2_1);
-                    p3.before(p2_2);
-                    p2_1.before(p1);
-                    // 微调间距
-                    $(".sign").css("height", "40px"); // up个性签名
-                    //$('#__bofqi').css('margin', '0');
-                    p2.css("padding", "0");
-                    //$('#__bofqi').css('height', '100%');
-                    $("#bofqi").css("margin", "0");
-                    $('.b-page-body>div:gt(0)').css("margin-left", "115px");
-                    // 调整播放器大小事件
-                    $(window).resize(function () {
-                        var width = $(window).width();
-                        var height = $(window).height() - 110;
-                        $(".player").css({
-                            "width": width + "px",
-                            "height": height + "px"
+                    var p1,p2,p2_1,p2_2,p3;
+                    if ($("#app").length == 1) {
+                        // 移动元素位置
+                        p1 =  $('#app>div>div:eq(1)'); // 头部
+                        p2 = $('#app>div>div:eq(3)'); // 播放器
+                        p2_1 = $('<div></div>'); // 分p
+                        p2_2 = $('#arc_toolbar_report'); // 视频底部数据栏
+                        p3 = $('#app>div>div:eq(4)');  // 底部（视频信息+评论）
+                        p3.before(p2_1);
+                        p3.before(p2_2);
+                        p2_1.before(p1);
+                        // 微调间距
+                        $(".sign").css("height", "40px"); // up个性签名
+                        p2.css("padding", "0");
+                        $("#bofqi").css("margin", "0");
+                        $('#__bofqi').css('margin', '0');
+                        $('#__bofqi').css('height', '100%');
+                        $('#app>div>div:gt(2)').css("margin-left", "115px");
+                        // 调整播放器大小事件
+                        $(window).resize(function () {
+                            var width = $(window).width();
+                            var height = $(window).height() - 110;
+                            $(".player").css({
+                                "width": width + "px",
+                                "height": height + "px"
+                            });
                         });
-                    });
-                    // 修改回到顶部按钮
-                    $('.gotop').unbind().click(function () {
-                        that.setScrollTo();
-                    });
+                        //修改回到顶部按钮
+                        $(".go-top.icon").before('<div title="返回顶部" class="go-top icon"></div>').remove();
+                        $(".go-top.icon").click(function () {
+                            that.setScrollTo();
+                        });
+                        $(window).on('scroll',function(){
+                            if ($(window).scrollTop() > $(window).height()) {//页面滚动高度大于屏幕高度
+                                $(".fixed-nav-m").fadeIn();
+                            } else {
+                                $(".fixed-nav-m").fadeOut();
+                            }
+                        });
+                        $(window).trigger('scroll');
+                    } else {
+                        // 移动元素位置
+                        p1 =  $('.b-page-body>div:eq(0)'); // 头部
+                        p2 = $('.b-page-body>div:eq(1)'); // 播放器
+                        p2_1 = $('.b-page-body>div:eq(1)>div:eq(1)'); // 分p
+                        p2_2 = $('#arc_toolbar_report'); // 视频底部数据栏
+                        p3 = $('.b-page-body>div:eq(2)');  // 底部（视频信息+评论）
+                        p3.before(p2_1);
+                        p3.before(p2_2);
+                        p2_1.before(p1);
+                        // 微调间距
+                        $(".sign").css("height", "40px"); // up个性签名
+                        p2.css("padding", "0");
+                        $("#bofqi").css("margin", "0");
+                        $('.b-page-body>div:gt(0)').css("margin-left", "115px");
+                        // 调整播放器大小事件
+                        $(window).resize(function () {
+                            var width = $(window).width();
+                            var height = $(window).height() - 110;
+                            $(".player").css({
+                                "width": width + "px",
+                                "height": height + "px"
+                            });
+                        });
+                        // 修改回到顶部按钮
+                        $('.gotop').unbind().click(function () {
+                            that.setScrollTo();
+                        });
+                    }
                     break;
                 case 'bangumi':
                     $('.bangumi-info-wrapper').before($('.bangumi-header'));
