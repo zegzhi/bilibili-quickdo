@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili-H5播放器快捷操作
 // @namespace    https://github.com/zegzhi/bilibili-quickdo
-// @version      1.3.4
+// @version      1.3.5
 // @description  bilibili - H5播放器快捷操作
 // @author       zegzhi
 // @match        *://www.bilibili.com/bangumi/play/ep*
@@ -13,8 +13,8 @@
 // ==/UserScript==
 
 /*
-v1.3.4 更新：
-    兼容部分播放页面
+v1.3.5 更新：
+    修复bug
 ## 功能
 - 双击全屏
 - ```+``` ```-```键调节播放速度
@@ -295,7 +295,8 @@ v1.3.4 更新：
                         // 移动元素位置
                         p1 =  $('#app>div>div:eq(1)'); // 头部
                         p2 = $('#app>div>div:eq(3)'); // 播放器
-                        p2_1 = $('<div></div>'); // 分p
+                        p2_1 = $('.multi-page'); // 分p
+                        p2_1 = (p2_1.length == 0 ? $('<div></div>') : p2_1);
                         p2_2 = $('#arc_toolbar_report'); // 视频底部数据栏
                         p3 = $('#app>div>div:eq(4)');  // 底部（视频信息+评论）
                         p3.before(p2_1);
