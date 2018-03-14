@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili-H5播放器快捷操作
 // @namespace    https://github.com/zegzhi/bilibili-quickdo
-// @version      1.3.5
+// @version      1.3.6
 // @description  bilibili - H5播放器快捷操作
 // @author       zegzhi
 // @match        *://www.bilibili.com/bangumi/play/ep*
@@ -13,8 +13,9 @@
 // ==/UserScript==
 
 /*
-v1.3.5 更新：
-    修复bug
+v1.3.6 更新：
+    去除会员标识
+    适配新页面
 ## 功能
 - 双击全屏
 - ```+``` ```-```键调节播放速度
@@ -287,18 +288,20 @@ v1.3.5 更新：
         },
         setPageStyle: function () {
             var that = this;
+            // 去除会员标识
+            $("body").append('<style type="text/css"> .bilibili-player-bigvip {display:none}</style>');
             if (GM_getValue('swidescreen') !== 1) return;
             switch (this.href) {
                 case 'video':
                     var p1,p2,p2_1,p2_2,p3;
                     if ($("#app").length == 1) {
                         // 移动元素位置
-                        p1 =  $('#app>div>div:eq(1)'); // 头部
-                        p2 = $('#app>div>div:eq(3)'); // 播放器
+                        p1 =  $('#app>div>div:visible:eq(1)'); // 头部
+                        p2 = $('#app>div>div:visible:eq(3)'); // 播放器
                         p2_1 = $('.multi-page'); // 分p
                         p2_1 = (p2_1.length == 0 ? $('<div></div>') : p2_1);
                         p2_2 = $('#arc_toolbar_report'); // 视频底部数据栏
-                        p3 = $('#app>div>div:eq(4)');  // 底部（视频信息+评论）
+                        p3 = $('#app>div>div:visible:eq(4)');  // 底部（视频信息+评论）
                         p3.before(p2_1);
                         p3.before(p2_2);
                         p2_1.before(p1);
@@ -307,8 +310,8 @@ v1.3.5 更新：
                         p2.css("padding", "0");
                         $("#bofqi").css("margin", "0");
                         $('#__bofqi').css('margin', '0');
-                        $('#__bofqi').css('height', '100%');
-                        $('#app>div>div:gt(2)').css("margin-left", "115px");
+                        $('#__bofqi').css('min-height', '0');
+                        $('#app>div>div:visible:gt(2)').css("margin-left", "115px");
                         // 调整播放器大小事件
                         $(window).resize(function () {
                             var width = $(window).width();
