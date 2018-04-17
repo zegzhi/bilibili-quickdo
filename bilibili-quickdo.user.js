@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili-H5播放器快捷操作
 // @namespace    https://github.com/zegzhi/bilibili-quickdo
-// @version      1.3.6
+// @version      1.3.7
 // @description  bilibili - H5播放器快捷操作
 // @author       zegzhi
 // @match        *://www.bilibili.com/bangumi/play/ep*
@@ -13,9 +13,8 @@
 // ==/UserScript==
 
 /*
-v1.3.6 更新：
-    去除会员标识
-    适配新页面
+v1.3.7 更新：
+    兼容
 ## 功能
 - 双击全屏
 - ```+``` ```-```键调节播放速度
@@ -300,10 +299,11 @@ v1.3.6 更新：
                         p2 = $('#app>div>div:visible:eq(3)'); // 播放器
                         p2_1 = $('.multi-page'); // 分p
                         p2_1 = (p2_1.length == 0 ? $('<div></div>') : p2_1);
-                        p2_2 = $('#arc_toolbar_report'); // 视频底部数据栏
+                        //p2_2 = $('#arc_toolbar_report').css('display','none'); // 视频底部数据栏
+                        $("body").append('<style type="text/css">#arc_toolbar_report {display:none}</style>');
                         p3 = $('#app>div>div:visible:eq(4)');  // 底部（视频信息+评论）
                         p3.before(p2_1);
-                        p3.before(p2_2);
+                        //p3.before(p2_2);
                         p2_1.before(p1);
                         // 微调间距
                         $(".sign").css("height", "40px"); // up个性签名
