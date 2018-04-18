@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         bilibili-H5播放器快捷操作
 // @namespace    https://github.com/zegzhi/bilibili-quickdo
-// @version      1.3.7
+// @version      1.3.8
 // @description  bilibili - H5播放器快捷操作
 // @author       zegzhi
 // @match        *://www.bilibili.com/bangumi/play/ep*
@@ -13,7 +13,7 @@
 // ==/UserScript==
 
 /*
-v1.3.7 更新：
+v1.3.8 更新：
     兼容
 ## 功能
 - 双击全屏
@@ -299,11 +299,11 @@ v1.3.7 更新：
                         p2 = $('#app>div>div:visible:eq(3)'); // 播放器
                         p2_1 = $('.multi-page'); // 分p
                         p2_1 = (p2_1.length == 0 ? $('<div></div>') : p2_1);
-                        //p2_2 = $('#arc_toolbar_report').css('display','none'); // 视频底部数据栏
-                        $("body").append('<style type="text/css">#arc_toolbar_report {display:none}</style>');
+                        p2_2 = $('#arc_toolbar_report'); // 视频底部数据栏
+                        //$("body").append('<style type="text/css">#arc_toolbar_report {display:none}</style>');
                         p3 = $('#app>div>div:visible:eq(4)');  // 底部（视频信息+评论）
                         p3.before(p2_1);
-                        //p3.before(p2_2);
+                        p3.before(p2_2);
                         p2_1.before(p1);
                         // 微调间距
                         $(".sign").css("height", "40px"); // up个性签名
@@ -399,24 +399,30 @@ v1.3.7 更新：
             var timerCount = 0;
             this.href = /.com\/.{0,}?\//g.exec(location.href)[0].slice(5, -1);
             var that = this;
-            // 处理换P问题
-            window.onhashchange = function () {
-                setTimeout(function () {
-                    that.video = null;
-                    that.init(1);
-                }, 1000);
-            };
             // 等待Video组件加载完
             var timer = window.setInterval(function () {
                 that.video = $('video')[0];
                 if (that.video) {
+                    // 处理换P问题
+                    window.onhashchange = function () {
+                        setTimeout(function () {
+                            that.video = null;
+                            that.init(1);
+                        }, 1000);
+                    };
+                    $('.item.router-link-active').live('click',function(){
+                        location.reload();
+                    });
                     try {
                         if (n === 0) {
-                            that.setPageStyle(); // 调整页面样式(剧场模式)
+                            $(that.video).one("canplay",function(){
+                                that.setPageStyle(); // 调整页面样式(剧场模式)
+                            });
                             that.bindKeydown(); // 绑定Keydown
                         }
                         that.initInfoStyle(); // 初始化信息样式
                         that.initSettingHTML(); // 初始化设置页面
+                        that.setPageStyle(); // 调整页面样式(剧场模式)
                         that.autoHandler(); // 初始化播放器设置
                     } catch (e) {
                         console.log('playerQuickDo init error:' + e);
