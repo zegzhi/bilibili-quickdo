@@ -1,6 +1,10 @@
 # bilibili-quickdo
 b站H5播放器快速操作
 
+## 注意
+本脚本已不再维护更新，可以转用以下脚本：
+https://github.com/mickey7q7/bilibili_adjustPlayer
+
 ## 功能
 - 双击全屏
 - ```+``` ```-```键调节播放速度
